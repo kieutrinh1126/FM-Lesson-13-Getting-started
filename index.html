@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guess the Job</title>
+  <style>
+    :root {
+      --card: #ffffff;
+      --text: #17324d;
+      --muted: #5f7388;
+      --border: #d9e5f2;
+      --accent: #5c8df6;
+      --correct: #dff5df;
+      --correct-border: #86c98a;
+      --incorrect: #ffe1e1;
+      --incorrect-border: #ef8c8c;
+      --shadow: 0 10px 25px rgba(22, 53, 97, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #eef5ff 0%, #f9fbff 100%);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 18px 40px;
+    }
+
+    .header {
+      background: rgba(244, 248, 255, 0.95);
+      border-bottom: 1px solid rgba(217, 229, 242, 0.8);
+    }
+
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 18px 24px;
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .title-wrap h1 {
+      margin: 0 0 10px;
+      font-size: 2.8rem;
+      line-height: 1.05;
+    }
+
+    .title-wrap p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      max-width: 950px;
+      font-size: 1rem;
+    }
+
+    .scoreboard {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+      justify-content: space-between;
+    }
+
+    .scoreboard strong {
+      font-size: 1.1rem;
+      white-space: nowrap;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      background: var(--accent);
+      color: white;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    button.secondary {
+      background: #8aa7d8;
+    }
+
+    .word-chain-box {
+      margin-top: 8px;
+      background: var(--card);
+      border: 2px dashed #b8cdea;
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .word-chain-box h2 {
+      margin: 0 0 12px;
+      font-size: 1.8rem;
+    }
+
+    .chain {
+      background: #f7fbff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      font-family: "Courier New", Courier, monospace;
+      word-break: break-word;
+      line-height: 1.7;
+      color: #1f4266;
+      font-size: 1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .image-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 240px;
+    }
+
+    .avatar {
+      width: 300px;
+      height: 220px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: #f7fbff;
+      object-fit: cover;
+      display: block;
+    }
+
+    .avatar-fallback {
+      width: 300px;
+      height: 220px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: #f7fbff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .number {
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .desc {
+      line-height: 1.55;
+      min-height: 110px;
+    }
+
+    .answer-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      outline: none;
+      font-size: 1rem;
+      transition: 0.2s ease;
+      background: #fff;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(92, 141, 246, 0.12);
+    }
+
+    .status {
+      min-height: 20px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .correct {
+      background: var(--correct) !important;
+      border-color: var(--correct-border) !important;
+    }
+
+    .incorrect {
+      background: var(--incorrect) !important;
+      border-color: var(--incorrect-border) !important;
+    }
+
+    .flash {
+      animation: flashRed 0.5s ease 2;
+    }
+
+    @keyframes flashRed {
+      0%, 100% { background: #fff; }
+      50% { background: var(--incorrect); }
+    }
+
+    @media (max-width: 700px) {
+      .title-wrap h1 { font-size: 2.1rem; }
+      .desc { min-height: unset; }
+      .scoreboard { width: 100%; }
+      .controls { width: 100%; }
+      .controls button { flex: 1; }
+      .avatar, .avatar-fallback { width: 100%; height: auto; min-height: 220px; }
+      .image-wrap { min-height: 220px; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-inner">
+      <div class="title-wrap">
+        <h1>Guess the Job</h1>
+        <p>Look at the word chain below. Identify the job title in the word chain that matches the job description. Type the correct job title in the box provided.</p>
+      </div>
+      <div class="scoreboard">
+        <strong id="score">Score: 0 / 15</strong>
+        <div class="controls">
+          <button id="checkAllBtn" type="button">Check All</button>
+          <button id="resetBtn" class="secondary" type="button">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <section class="word-chain-box">
+      <h2>Word Chain</h2>
+      <div class="chain">DOCTORRECEPTIONISTWAITERMECHANICFLIGHTATTENDANTCHEFENGINEERSOFTWAREDEVELOPERSALESPERSONNURSECONSTRUCTIONWORKERPOLICEOFFICERACCOUNTANTFREELANCERTEACHER</div>
+    </section>
+
+    <section id="gameGrid" class="grid"></section>
+  </main>
+
+  <script>
+    const jobs = [
+      { answer: 'doctor', label: 'Doctor', description: 'This person has a busy career helping people get better when they are sick, and they usually earn a good living. …………………………..' },
+      { answer: 'teacher', label: 'Teacher', description: 'This person works at a school and helps students learn. They often plan lessons with their co-workers. …………………………..' },
+      { answer: 'engineer', label: 'Engineer', description: 'This person has a job that involves designing or building things. It can be a good career for people who like solving problems. …………………………..' },
+      { answer: 'waiter', label: 'Waiter', description: 'This person serves food and drinks in a restaurant. They often have flexible hours and work in teams. …………………………..' },
+      { answer: 'police officer', label: 'Police Officer', description: 'This person keeps people safe. It is a serious job and they sometimes work at night or on weekends. …………………………..' },
+      { answer: 'nurse', label: 'Nurse', description: 'This person looks after patients in a hospital and often works with other co-workers like doctors and other nurses. …………………………..' },
+      { answer: 'chef', label: 'Chef', description: 'This person cooks food in a restaurant. It is a creative job, but sometimes very busy and stressful. …………………………..' },
+      { answer: 'accountant', label: 'Accountant', description: 'This person works in an office, usually from nine to five, and helps people or businesses manage their money. …………………………..' },
+      { answer: 'flight attendant', label: 'Flight Attendant', description: 'This person works on planes, helps passengers, and travels to many countries. …………………………..' },
+      { answer: 'construction worker', label: 'Construction Worker', description: 'This person builds things like houses or roads. The job is very active and sometimes done outside. …………………………..' },
+      { answer: 'software developer', label: 'Software Developer', description: 'This person writes programs for computers. They often work at a desk and can sometimes work remotely. ………………………….' },
+      { answer: 'salesperson', label: 'Salesperson', description: 'This person talks to customers and tries to sell products. If they perform well by selling many products, they might get promoted. …………………………..' },
+      { answer: 'freelancer', label: 'Freelancer', description: 'This person is self-employed and chooses their own jobs, but their income is not always the same. …………………………..' },
+      { answer: 'mechanic', label: 'Mechanic', description: 'This person repairs cars and machines. They need to know how things work and use many tools. …………………………..' },
+      { answer: 'receptionist', label: 'Receptionist', description: 'This person works at the front desk, welcomes people, and answers phone calls. …………………………..' }
+    ];
+
+    const imageMap = {
+      'doctor': ['Doctor.png', 'doctor.png'],
+      'teacher': ['Teacher.png', 'teacher.png'],
+      'engineer': ['Engineer.png', 'engineer.png'],
+      'waiter': ['Waiter.png', 'waiter.png'],
+      'police officer': ['police-officer.png', 'Police officer.png', 'police officer.png'],
+      'nurse': ['Nurse.png', 'nurse.png'],
+      'chef': ['Chef.png', 'chef.png'],
+      'accountant': ['Accountant.png', 'accountant.png'],
+      'flight attendant': ['flight-attendant.png', 'Flight attendant.png', 'flight attendant.png'],
+      'construction worker': ['construction-worker.png', 'Construction worker.png', 'construction worker.png'],
+      'software developer': ['software-developer.png', 'Software developer.png', 'software developer.png'],
+      'salesperson': ['Salesperson.png', 'salesperson.png'],
+      'freelancer': ['Freelancer.png', 'freelancer.png'],
+      'mechanic': ['Mechanic.png', 'mechanic.png'],
+      'receptionist': ['Receptionist.png', 'receptionist.png']
+    };
+
+    const gameGrid = document.getElementById('gameGrid');
+    const scoreEl = document.getElementById('score');
+    const resetBtn = document.getElementById('resetBtn');
+    const checkAllBtn = document.getElementById('checkAllBtn');
+    const state = jobs.map(() => ({ correct: false }));
+
+    function normalize(text) {
+      return text.toLowerCase().trim();
+    }
+
+    function renderAvatar(job) {
+      const candidates = imageMap[job.answer] || [];
+      const container = document.createElement('div');
+      container.className = 'image-wrap';
+
+      const img = document.createElement('img');
+      img.className = 'avatar';
+      img.alt = job.label;
+
+      let attempt = 0;
+      const fallback = () => {
+        if (attempt < candidates.length) {
+          img.src = candidates[attempt++];
+        } else {
+          const fb = document.createElement('div');
+          fb.className = 'avatar-fallback';
+          fb.textContent = job.label;
+          container.innerHTML = '';
+          container.appendChild(fb);
+        }
+      };
+
+      img.onerror = fallback;
+      fallback();
+      container.appendChild(img);
+      return container;
+    }
+
+    function renderCards() {
+      gameGrid.innerHTML = '';
+
+      jobs.forEach((job, index) => {
+        const card = document.createElement('article');
+        card.className = 'card';
+
+        const avatarNode = renderAvatar(job);
+        card.appendChild(avatarNode);
+
+        const number = document.createElement('div');
+        number.className = 'number';
+        number.textContent = `${index + 1}.`;
+        card.appendChild(number);
+
+        const desc = document.createElement('div');
+        desc.className = 'desc';
+        desc.textContent = job.description;
+        card.appendChild(desc);
+
+        const answerRow = document.createElement('div');
+        answerRow.className = 'answer-row';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = `input-${index}`;
+        input.placeholder = 'Type the job title';
+        input.autocomplete = 'off';
+        answerRow.appendChild(input);
+        card.appendChild(answerRow);
+
+        const status = document.createElement('div');
+        status.className = 'status';
+        status.id = `status-${index}`;
+        card.appendChild(status);
+
+        gameGrid.appendChild(card);
+
+        input.addEventListener('input', () => {
+          input.classList.remove('incorrect', 'flash');
+          if (!state[index].correct) {
+            input.classList.remove('correct');
+          }
+        });
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            checkAnswer(index);
+          }
+        });
+
+        input.addEventListener('blur', () => {
+          if (input.value.trim()) {
+            checkAnswer(index);
+          }
+        });
+      });
+    }
+
+    function checkAnswer(index) {
+      const input = document.getElementById(`input-${index}`);
+      const status = document.getElementById(`status-${index}`);
+      const guess = normalize(input.value);
+      const answer = normalize(jobs[index].answer);
+
+      if (!guess) {
+        input.classList.remove('correct', 'incorrect', 'flash');
+        status.textContent = '';
+        return;
+      }
+
+      if (guess === answer) {
+        input.classList.remove('incorrect', 'flash');
+        input.classList.add('correct');
+        input.value = jobs[index].label;
+        status.textContent = 'Correct!';
+        status.style.color = '#2e7d32';
+        state[index].correct = true;
+      } else {
+        input.classList.remove('correct');
+        input.classList.add('incorrect', 'flash');
+        status.textContent = 'Try again.';
+        status.style.color = '#c05050';
+        state[index].correct = false;
+        setTimeout(() => input.classList.remove('flash'), 650);
+      }
+
+      updateScore();
+    }
+
+    function updateScore() {
+      const score = state.filter(item => item.correct).length;
+      scoreEl.textContent = `Score: ${score} / 15`;
+    }
+
+    function checkAll() {
+      jobs.forEach((_, index) => checkAnswer(index));
+    }
+
+    function resetGame() {
+      jobs.forEach((_, index) => {
+        const input = document.getElementById(`input-${index}`);
+        const status = document.getElementById(`status-${index}`);
+        input.value = '';
+        input.classList.remove('correct', 'incorrect', 'flash');
+        status.textContent = '';
+        state[index].correct = false;
+      });
+      updateScore();
+    }
+
+    checkAllBtn.addEventListener('click', checkAll);
+    resetBtn.addEventListener('click', resetGame);
+
+    renderCards();
+    updateScore();
+  </script>
+</body>
+</html>
